@@ -3,6 +3,8 @@ from flask_migrate import Migrate
 from models import db, Doctor, Patient, PatientRecord
 from flask_restful import Resource, Api
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -11,17 +13,20 @@ db.init_app(app)
 migrate = Migrate(app, db)
 api = Api(app)
 CORS(app)
+jwt = JWTManager(app)
+app.config['JWT_SECRET_KEY'] = os.urandom(24).hex()
+
 
 # doctor registration endpoint
 class RegsiterDoc(Resource):
     def post(self):
         # change to request.json when linking 
-        data = request.json 
+        data = request.json
 
         new_doc = Doctor(
             name = data['name'],
             email = data['email'],
-            password = data['password']
+            password = data['password'],
         )
 
         # queries the database to check for existing doctor
@@ -38,6 +43,21 @@ class RegsiterDoc(Resource):
         # add the new doctor if they dont have an account
         db.session.add(new_doc)
         db.session.commit()
+
+        token_payload = {
+           "doctor_id": new_doc.id,
+           "name": new_doc.name
+        }
+
+        access_token = create_access_token(identity=token_payload)
+
+        response_data = {
+            "message": "Registration Successful",
+            "access_token": access_token
+        }
+        response = make_response(jsonify(response_data), 201)
+        response.headers['Authorization'] = f'Bearer {access_token}'
+        return response
 
 api.add_resource(RegsiterDoc, '/auth/registedoc')
 
@@ -102,6 +122,22 @@ class RegisterPatient(Resource):
         db.session.add(new_patient)
         db.session.commit()
 
+        token_payload = {
+            "patient_id": new_patient.id,
+            'nationalno': new_patient.nationalno 
+        }
+
+        access_token = create_access_token(identity=token_payload)
+
+        response_data = {
+            "message": "Registration Successful!",
+            "access_token": access_token
+        }
+
+        response = make_response(jsonify(response_data))
+        response.headers['Authorization'] = f'Bearer {access_token}'
+        return response
+
 api.add_resource(RegisterPatient, "/auth/registerpatient")
 
 # patient login endpoint
@@ -109,8 +145,8 @@ api.add_resource(RegisterPatient, "/auth/registerpatient")
 class PatientLogin(Resource):
     def post(self):
 
-        nationalno = request.form['nationalno']
-        password = request.form['password']
+        nationalno = request.json['nationalno']
+        password = request.json['password']
 
         patient_nationalno = Patient.query.filter(Patient.nationalno == nationalno).first()
 
