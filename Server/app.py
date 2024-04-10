@@ -202,8 +202,9 @@ class LogOut(Resource):
 api.add_resource(LogOut, "/auth/logout")
 
 class PostPatientRecord(Resource):
+    @jwt_required()
     def post(self):
-        data = request.form
+        data = request.json
 
         new_post = PatientRecord(
             nationalno = data['nationalno'],
