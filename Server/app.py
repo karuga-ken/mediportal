@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from models import db, Doctor, Patient, PatientRecord
 from flask_restful import Resource, Api
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
 import os
 
 app = Flask(__name__)
@@ -87,10 +87,18 @@ class DocLogin(Resource):
                 }),401
             )
             return response
-        response_data = {
-            "message": "Log in Successful" 
+        token_payload = {
+            "doctor_id":doctor.id,
         }
-        response = jsonify(response_data)
+
+        access_token = create_access_token(identity=token_payload)
+
+        response_data = {
+            "message": "Log in Successful",
+            "access_token": access_token
+        }
+        response = make_response(jsonify(response_data), 201)
+        response.headers['Authorization'] = f'Bearer {access_token}'
         return response
     
 api.add_resource(DocLogin, "/auth/doctorlogin")
@@ -176,6 +184,22 @@ class PatientLogin(Resource):
         return response
 
 api.add_resource(PatientLogin, "/auth/patientlogin")
+
+class LogOut(Resource):
+    @jwt_required()
+    def post(self):
+        current_user_id = get_jwt_identity()
+
+        response = make_response(
+            jsonify({
+                "message": "Logout!!"
+            }), 200
+        )
+
+        response.headers['Authorization'] = ''
+        return response
+    
+api.add_resource(LogOut, "/auth/logout")
 
 class PostPatientRecord(Resource):
     def post(self):
