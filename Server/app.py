@@ -175,12 +175,19 @@ class PatientLogin(Resource):
                 }), 401
             )
             return response
+        token_payload = {
+            "patient_id": patient_nationalno.id 
+        }
+
+        access_token = create_access_token(identity = token_payload)
         
         response_data = {
-            "message": "Login Successful"
+            "message": "Login Successful",
+            "access_token": access_token
         }
 
         response = jsonify(response_data)
+        response.headers['Authorization'] = f'Bearer {access_token}'
         return response
 
 api.add_resource(PatientLogin, "/auth/patientlogin")
