@@ -13,7 +13,6 @@ class Doctor(db.Model):
     email = db.Column(db.String, unique = True)
     password = db.Column(db.String)
 
-    patientrecords = db.Relationship('PatientRecord', back_populates = 'doctor')
 
     def __repr__(self) -> str:
         return f'{self.id}, {self.name}, {self.email}, {self.password}'
@@ -39,10 +38,12 @@ class PatientRecord(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     nationalno = db.Column(db.Integer)
     hospital = db.Column(db.String)
-    DoctorName = db.Column(db.String, db.ForeignKey('doctors.name'))
+    DoctorName = db.Column(db.String)
     date = db.Column(db.Integer)
 
-    doctor = db.relationship('Doctor', back_populates = 'patientrecords')
+
 
     def __repr__(self) -> str:
-        return f'{self.nationalno}, {self.hospital}, {self.DoctorName}, {self.date}'
+        return f'{self.nationalno}, {self.hospital},  {self.DoctorName}, {self.date}'
+    
+  

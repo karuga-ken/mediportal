@@ -224,6 +224,7 @@ class PostPatientRecord(Resource):
         db.session.commit()
 api.add_resource(PostPatientRecord, '/addpatientrecord')
 
+
 if __name__ == '__main__':
     app.run(port = 7777, debug=True)
 
